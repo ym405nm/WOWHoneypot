@@ -64,3 +64,26 @@ $ python3 ./wowhoneypot.py
 
 - [morihi-soc.net](http://www.morihi-soc.net/)
 - [@morihi_soc](https://twitter.com/morihi_soc)
+
+## TENICHI EDITION
+
+デフォルトページを天下一品のラーメンの画像に切替える機能です。
+
+たぶん requests と FlickrAPI が必要になります。
+
+```bash:bash
+$ pip install requests
+$ pip install flickrapi
+```
+
+画像取得に Flickr にアクセスしますので API が必須になります。Flickr にアクセスして API KEY と SECRET を取得して、
+config.txt の flickrpublic / flickrsecret に記入してください。各クォートは不要です。イコールの前にスペースを入れないでください。
+外部に通信しますのでネットワーク設定をご確認ください。
+
+初回起動のみで次回以降は取得しません。
+
+本機能を使用しない場合は当該設定を消すか、デフォルトのままで動きます。
+
+> 人間はハニーポットにアクセスしないから・・・
+
+せやな

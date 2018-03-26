@@ -19,6 +19,9 @@ import select
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from mrr_checker import parse_mrr
 from datetime import datetime, timedelta, timezone
+from flickrapi import FlickrAPI
+import time
+import requests
 
 WOWHONEYPOT_VERSION = "1.0"
 
@@ -37,6 +40,9 @@ mrrdata = {}
 mrrids = []
 timeout = 3.0
 blacklist = {}
+flickrpublic = ""
+flickrsecret = ""
+photocount = "10"
 
 class WOWHoneypotHTTPServer(HTTPServer):
     def server_bind(self):
@@ -255,6 +261,12 @@ def config_load():
                 syslogserver = line.split('=')[1].strip()
             if line.startswith("syslogport"):
                 syslogport = line.split('=')[1].strip()
+            if line.startswith("flickrpublic"):
+                flickrpublic = line.split('=')[1].strip()
+            if line.startswith("flickrsecret"):
+                flickrsecret = line.split('=')[1].strip()
+            if line.startswith("photocount"):
+                photocount = line.split('=')[1].strip()
 
         global accesslogfile
         accesslogfile = os.path.join(logpath, accesslogfile_name)
@@ -300,6 +312,43 @@ def config_load():
     artdefaultpath = os.path.join(artpath, "default")
     if not os.path.exists(artdefaultpath) or not os.path.isdir(artdefaultpath):
         logging_system("{0} directory load error.".format(artdefaultpath), True, True)
+
+    # Ramen
+    if len(flickrpublic) > 0 and len(flickrsecret) and "0123456789abcdef" != flickrpublic:
+
+        # Enable Ramen
+        hello_html_path = "%sdefault/hello.html" % (artpath)
+        post_html_path = "%sdefault/post.html" % (artpath)
+        sample_html_path = "%sdefault/sample.html" % (artpath)
+
+        # html file check
+        if os.path.isfile(hello_html_path):
+            photocount = int(photocount)
+            flickr = FlickrAPI(flickrpublic, flickrsecret, format='parsed-json')
+            extras = 'url_m'
+            ramens = flickr.photos.search(text='天下一品', per_page=photocount, extras=extras, license='1,2,3,4,5,6')
+            photo_list = ramens['photos']['photo']
+            file_counter = 0
+            for photo_unit in photo_list:
+                file_counter = file_counter + 1
+                logging_system("Download Photos %s/%s" % (str(file_counter), photocount), False, False)
+                time.sleep(3)  # いらんかも
+                r = requests.get(photo_unit['url_m'], stream=True)
+                if r.status_code == 200:
+                    file_name = "%sdefault/ramen%s.html" % (artpath, str(file_counter))
+                    base64_data = base64.b64encode(r.content)
+                    output_data = "<img src=\"data:image/jpeg;base64,%s\">" % (str(base64_data).split('\'')[1])
+                    f = open(file_name, 'w')
+                    f.write(output_data)
+                    f.close()
+
+            # remove default html
+            # fix me...
+            os.remove(hello_html_path)
+            if os.path.isfile(post_html_path):
+                os.remove(post_html_path)
+            if os.path.isfile(sample_html_path):
+                os.remove(sample_html_path)
 
     global default_content
     for root, dirs, files in os.walk(artdefaultpath):

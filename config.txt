@@ -21,3 +21,8 @@ wowhoneypotlog=wowhoneypot.log
 syslog_enable=False
 syslogserver=127.0.0.1
 syslogport=514
+
+# TENICHI
+flickrpublic=0123456789abcdef
+flickrsecret=0123456789abcdef
+photocount=10
